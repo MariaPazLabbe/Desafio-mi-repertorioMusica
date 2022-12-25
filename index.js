@@ -80,3 +80,55 @@ app.post("/canciones", (req, res) => {
       }
     });
 });
+
+// Ruta para actualizar una canción en el archivo repertorios.json
+app.put("/canciones/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+  const cancion = req.body;
+  console.log(cancion);
+  cancion.id = parseInt(cancion.id);
+  console.log("id: ", id);
+
+  // Validar que el ID de la canción sea un número entero válido
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({
+      message: "El ID de la canción debe ser un número entero válido",
+    });
+  }
+
+  // Si ocurre un error al leer el archivo, se muestra un mensaje de error específico
+  fsp
+    .readFile("repertorios.json", "utf8")
+    .then((data) => {
+      const canciones = JSON.parse(data);
+
+      const encontrarCancion = canciones.findIndex(
+        (cancion) => cancion.id === id
+      );
+
+      if (encontrarCancion === -1) {
+        return res.status(404).json({
+          message: "La canción no se ha encontrado",
+        });
+      }
+
+      canciones[encontrarCancion] = cancion;
+      console.log("canciones: ", canciones);
+      // Si ocurre un error al escribir el archivo, se muestra un mensaje de error específico
+      return fsp.writeFile("repertorios.json", JSON.stringify(canciones));
+    })
+    .then(() => {
+      res.send("cancion actualizada");
+    })
+    .catch((error) => {
+      if (error.code === "ENOENT") {
+        res.json({ message: "El archivo repertorios.json no existe" });
+      } else if (error instanceof SyntaxError) {
+        res.json({
+          message: "El archivo repertorios.json tiene un formato inválido",
+        });
+      } else {
+        res.json({ message: "El recurso no esta disponible" });
+      }
+    });
+});
