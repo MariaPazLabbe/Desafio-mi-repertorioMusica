@@ -132,3 +132,42 @@ app.put("/canciones/:id", (req, res) => {
       }
     });
 });
+
+// Ruta para eliminar una canción del archivo repertorios.json
+app.delete("/canciones/:id", (req, res) => {
+  const { id } = req.params;
+
+  // Si ocurre un error al leer el archivo, se muestra un mensaje de error específico
+  fsp
+    .readFile("repertorios.json", "utf8")
+    .then((data) => {
+      const canciones = JSON.parse(data);
+      const index = canciones.findIndex(
+        (cancion) => cancion.id === parseInt(id)
+      );
+      console.log(index);
+      if (index === -1) {
+        return res
+          .status(404)
+          .json({ message: "no se encuentra la canción en la lista" });
+      }
+
+      canciones.splice(index, 1);
+      // Si ocurre un error al escribir el archivo, se muestra un mensaje de error específico
+      return fsp.writeFile("repertorios.json", JSON.stringify(canciones));
+    })
+    .then(() => {
+      res.send("cancion eliminada");
+    })
+    .catch((error) => {
+      if (error.code === "ENOENT") {
+        res.json({ message: "El archivo repertorios.json no existe" });
+      } else if (error instanceof SyntaxError) {
+        res.json({
+          message: "El archivo repertorios.json tiene un formato inválido",
+        });
+      } else {
+        res.json({ message: "El recurso no esta disponible" });
+      }
+    });
+});
