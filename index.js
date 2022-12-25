@@ -48,3 +48,35 @@ app.get("/canciones", (req, res) => {
       }
     });
 });
+
+// Ruta para agregar una canción al archivo repertorios.json
+app.post("/canciones", (req, res) => {
+  const cancion = req.body;
+  console.log(cancion);
+
+  // Si ocurre un error al leer el archivo, se muestra un mensaje de error específico
+  fsp
+    .readFile("repertorios.json", "utf8")
+    .then((data) => {
+      const canciones = JSON.parse(data);
+      // Si ocurre un error al escribir el archivo, se muestra un mensaje de error específico
+      return fsp.writeFile(
+        "repertorios.json",
+        JSON.stringify([...canciones, cancion])
+      );
+    })
+    .then(() => {
+      res.send("cancion agregada");
+    })
+    .catch((error) => {
+      if (error.code === "ENOENT") {
+        res.json({ message: "El archivo repertorios.json no existe" });
+      } else if (error instanceof SyntaxError) {
+        res.json({
+          message: "El archivo repertorios.json tiene un formato inválido",
+        });
+      } else {
+        res.json({ message: "El recurso no esta disponible" });
+      }
+    });
+});
