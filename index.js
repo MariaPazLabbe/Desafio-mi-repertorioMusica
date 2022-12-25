@@ -27,3 +27,24 @@ app.use((req, res, next) => {
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
+// Ruta para obtener el contenido del archivo repertorios.json
+app.get("/canciones", (req, res) => {
+  // Si ocurre un error al leer el archivo, se muestra un mensaje de error específico
+  fsp
+    .readFile("repertorios.json", "utf8")
+    .then((data) => {
+      const canciones = JSON.parse(data);
+      res.json(canciones);
+    })
+    .catch((error) => {
+      if (error.code === "ENOENT") {
+        res.json({ message: "El archivo repertorios.json no existe" });
+      } else if (error instanceof SyntaxError) {
+        res.json({
+          message: "El archivo repertorios.json tiene un formato inválido",
+        });
+      } else {
+        res.json({ message: "El recurso no esta disponible" });
+      }
+    });
+});
